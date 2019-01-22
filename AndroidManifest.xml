@@ -383,7 +383,7 @@
               android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
 
     <activity android:name=".scribbles.StickerSelectActivity"
-              android:theme="@style/TextSecure.LightTheme"
+              android:theme="@style/TextSecure.ScribbleTheme"
               android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
 
     <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
@@ -422,10 +422,15 @@
               android:exported="true"
               android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
 
+    <activity android:name=".camera.CameraActivity"
+              android:theme="@style/TextSecure.ScribbleTheme"
+              android:windowSoftInputMode="stateHidden"
+              android:configChanges="touchscreen|keyboard|keyboardHidden|orientation|screenLayout|screenSize"/>
+
     <service android:enabled="true" android:name="org.thoughtcrime.securesms.service.WebRtcCallService"/>
     <service android:enabled="true" android:name=".service.ApplicationMigrationService"/>
     <service android:enabled="true" android:exported="false" android:name=".service.KeyCachingService"/>
-    <service android:enabled="true" android:name=".service.MessageRetrievalService"/>
+    <service android:enabled="true" android:name=".service.IncomingMessageObserver$ForegroundService"/>
 
     <service android:name=".service.QuickResponseService"
              android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
@@ -536,8 +541,6 @@
 
     <receiver android:name=".service.ExpirationListener" />
 
-    <receiver android:name=".jobmanager.requirements.BackoffReceiver" />
-
     <provider android:name=".providers.PartProvider"
               android:grantUriPermissions="true"
               android:exported="false"
@@ -568,6 +571,12 @@
     <provider android:name=".database.DatabaseContentProviders$Attachment"
               android:authorities="org.thoughtcrime.securesms.database.attachment"
               android:exported="false" />
+
+    <provider
+              android:name="androidx.work.impl.WorkManagerInitializer"
+              android:authorities="${applicationId}.workmanager-init"
+              android:exported="false"
+              tools:node="remove" />
 
     <receiver android:name=".service.BootReceiver">
         <intent-filter>

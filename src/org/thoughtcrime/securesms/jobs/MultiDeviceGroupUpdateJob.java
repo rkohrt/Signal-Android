@@ -1,19 +1,21 @@
 package org.thoughtcrime.securesms.jobs;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.UnidentifiedAccessUtil;
 import org.thoughtcrime.securesms.database.Address;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.GroupDatabase;
 import org.thoughtcrime.securesms.dependencies.InjectableType;
-import org.thoughtcrime.securesms.jobs.requirements.MasterSecretRequirement;
+import org.thoughtcrime.securesms.jobmanager.SafeData;
 import org.thoughtcrime.securesms.logging.Log;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.util.GroupUtil;
 import org.thoughtcrime.securesms.jobmanager.JobParameters;
-import org.thoughtcrime.securesms.jobmanager.requirements.NetworkRequirement;
+import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.SignalServiceMessageSender;
 import org.whispersystems.signalservice.api.crypto.UntrustedIdentityException;
@@ -34,6 +36,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import androidx.work.Data;
+
 public class MultiDeviceGroupUpdateJob extends MasterSecretJob implements InjectableType {
 
   private static final long serialVersionUID = 1L;
@@ -41,17 +45,34 @@ public class MultiDeviceGroupUpdateJob extends MasterSecretJob implements Inject
 
   @Inject transient SignalServiceMessageSender messageSender;
 
+  public MultiDeviceGroupUpdateJob() {
+    super(null, null);
+  }
+
   public MultiDeviceGroupUpdateJob(Context context) {
     super(context, JobParameters.newBuilder()
-                                .withRequirement(new NetworkRequirement(context))
-                                .withRequirement(new MasterSecretRequirement(context))
+                                .withNetworkRequirement()
+                                .withMasterSecretRequirement()
                                 .withGroupId(MultiDeviceGroupUpdateJob.class.getSimpleName())
-                                .withPersistence()
                                 .create());
   }
 
   @Override
+  protected void initialize(@NonNull SafeData data) {
+  }
+
+  @Override
+  protected @NonNull Data serialize(@NonNull Data.Builder dataBuilder) {
+    return dataBuilder.build();
+  }
+
+  @Override
   public void onRun(MasterSecret masterSecret) throws Exception {
+    if (!TextSecurePreferences.isMultiDevice(context)) {
+      Log.i(TAG, "Not multi device, aborting...");
+      return;
+    }
+
     File                 contactDataFile = createTempFile("multidevice-contact-update");
     GroupDatabase.Reader reader          = null;
 
@@ -103,11 +124,6 @@ public class MultiDeviceGroupUpdateJob extends MasterSecretJob implements Inject
   }
 
   @Override
-  public void onAdded() {
-
-  }
-
-  @Override
   public void onCanceled() {
 
   }
@@ -122,7 +138,8 @@ public class MultiDeviceGroupUpdateJob extends MasterSecretJob implements Inject
                                                                               .withLength(contactsFile.length())
                                                                               .build();
 
-    messageSender.sendMessage(SignalServiceSyncMessage.forGroups(attachmentStream));
+    messageSender.sendMessage(SignalServiceSyncMessage.forGroups(attachmentStream),
+                              UnidentifiedAccessUtil.getAccessForSync(context));
   }
 
 

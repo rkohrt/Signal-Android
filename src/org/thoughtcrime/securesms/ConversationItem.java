@@ -304,7 +304,6 @@ public class ConversationItem extends LinearLayout
     if (messageRecord.isOutgoing()) {
       bodyBubble.getBackground().setColorFilter(defaultBubbleColor, PorterDuff.Mode.MULTIPLY);
     } else {
-      bodyBubble.getBackground().setColorFilter(defaultBubbleColor, PorterDuff.Mode.MULTIPLY);
       bodyBubble.getBackground().setColorFilter(messageRecord.getRecipient().getColor().toConversationColor(context), PorterDuff.Mode.MULTIPLY);
     }
 
@@ -316,7 +315,7 @@ public class ConversationItem extends LinearLayout
   private void setAudioViewTint(MessageRecord messageRecord, Recipient recipient) {
     if (messageRecord.isOutgoing()) {
       if (DynamicTheme.LIGHT.equals(TextSecurePreferences.getTheme(context))) {
-        audioViewStub.get().setTint(getContext().getResources().getColor(R.color.core_light_60), defaultBubbleColor);
+        audioViewStub.get().setTint(getContext().getResources().getColor(R.color.core_grey_60), defaultBubbleColor);
       } else {
         audioViewStub.get().setTint(Color.WHITE, defaultBubbleColor);
       }
@@ -559,13 +558,7 @@ public class ConversationItem extends LinearLayout
 
   private void setContactPhoto(@NonNull Recipient recipient) {
     if (contactPhoto == null) return;
-
-    if (messageRecord.isOutgoing() || !groupThread) {
-      contactPhoto.setVisibility(View.GONE);
-    } else {
-      contactPhoto.setAvatar(glideRequests, recipient, true);
-      contactPhoto.setVisibility(View.VISIBLE);
-    }
+    contactPhoto.setAvatar(glideRequests, recipient, true);
   }
 
   private SpannableString linkifyMessageBody(SpannableString messageBody, boolean shouldLinkifyAllLinks) {
