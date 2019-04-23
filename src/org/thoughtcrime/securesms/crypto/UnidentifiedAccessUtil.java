@@ -5,12 +5,11 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
-import android.util.Log;
 
 import org.signal.libsignal.metadata.certificate.CertificateValidator;
 import org.signal.libsignal.metadata.certificate.InvalidCertificateException;
 import org.thoughtcrime.securesms.BuildConfig;
-import org.thoughtcrime.securesms.database.RecipientDatabase;
+import org.thoughtcrime.securesms.logging.Log;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.util.Base64;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
@@ -55,9 +54,9 @@ public class UnidentifiedAccessUtil {
         ourUnidentifiedAccessKey = Util.getSecretBytes(16);
       }
 
-      Log.i(TAG, "Their access key present? " + (theirUnidentifiedAccessKey != null));
-      Log.i(TAG, "Our access key present? " + (ourUnidentifiedAccessKey != null));
-      Log.i(TAG, "Our certificate present? " + (ourUnidentifiedAccessCertificate != null));
+      Log.i(TAG, "Their access key present? " + (theirUnidentifiedAccessKey != null) +
+                 " | Our access key present? " + (ourUnidentifiedAccessKey != null) +
+                 " | Our certificate present? " + (ourUnidentifiedAccessCertificate != null));
 
       if (theirUnidentifiedAccessKey != null &&
           ourUnidentifiedAccessKey != null   &&

@@ -28,6 +28,8 @@ import android.support.multidex.MultiDexApplication;
 
 import com.google.android.gms.security.ProviderInstaller;
 
+import org.thoughtcrime.securesms.components.TypingStatusRepository;
+import org.thoughtcrime.securesms.components.TypingStatusSender;
 import org.thoughtcrime.securesms.crypto.PRNGFixes;
 import org.thoughtcrime.securesms.dependencies.AxolotlStorageModule;
 import org.thoughtcrime.securesms.dependencies.InjectableType;
@@ -82,6 +84,8 @@ public class ApplicationContext extends MultiDexApplication implements Dependenc
   private static final String TAG = ApplicationContext.class.getSimpleName();
 
   private ExpiringMessageManager  expiringMessageManager;
+  private TypingStatusRepository  typingStatusRepository;
+  private TypingStatusSender      typingStatusSender;
   private JobManager              jobManager;
   private IncomingMessageObserver incomingMessageObserver;
   private ObjectGraph             objectGraph;
@@ -104,6 +108,8 @@ public class ApplicationContext extends MultiDexApplication implements Dependenc
     initializeJobManager();
     initializeMessageRetrieval();
     initializeExpiringMessageManager();
+    initializeTypingStatusRepository();
+    initializeTypingStatusSender();
     initializeGcmCheck();
     initializeSignedPreKeyCheck();
     initializePeriodicTasks();
@@ -145,6 +151,14 @@ public class ApplicationContext extends MultiDexApplication implements Dependenc
     return expiringMessageManager;
   }
 
+  public TypingStatusRepository getTypingStatusRepository() {
+    return typingStatusRepository;
+  }
+
+  public TypingStatusSender getTypingStatusSender() {
+    return typingStatusSender;
+  }
+
   public boolean isAppVisible() {
     return isAppVisible;
   }
@@ -171,7 +185,7 @@ public class ApplicationContext extends MultiDexApplication implements Dependenc
 
   private void initializeJobManager() {
     WorkManager.initialize(this, new Configuration.Builder()
-                                                  .setMinimumLoggingLevel(android.util.Log.DEBUG)
+                                                  .setMinimumLoggingLevel(android.util.Log.INFO)
                                                   .build());
 
     this.jobManager = new JobManager(this, WorkManager.getInstance());
@@ -204,6 +218,14 @@ public class ApplicationContext extends MultiDexApplication implements Dependenc
 
   private void initializeExpiringMessageManager() {
     this.expiringMessageManager = new ExpiringMessageManager(this);
+  }
+
+  private void initializeTypingStatusRepository() {
+    this.typingStatusRepository = new TypingStatusRepository();
+  }
+
+  private void initializeTypingStatusSender() {
+    this.typingStatusSender = new TypingStatusSender(this);
   }
 
   private void initializePeriodicTasks() {
