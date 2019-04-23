@@ -63,6 +63,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,7 +78,7 @@ import java.util.concurrent.TimeUnit;
 public class Util {
   private static final String TAG = Util.class.getSimpleName();
 
-  public static Handler handler = new Handler(Looper.getMainLooper());
+  private static volatile Handler handler;
 
   public static <T> List<T> asList(T... elements) {
     List<T> result = new LinkedList<>();
@@ -139,6 +140,26 @@ public class Util {
 
   public static <K, V> V getOrDefault(@NonNull Map<K, V> map, K key, V defaultValue) {
     return map.containsKey(key) ? map.get(key) : defaultValue;
+  }
+
+  public static String getFirstNonEmpty(String... values) {
+    for (String value : values) {
+      if (!TextUtils.isEmpty(value)) {
+        return value;
+      }
+    }
+    return "";
+  }
+
+  public static <E> List<List<E>> chunk(@NonNull List<E> list, int chunkSize) {
+    List<List<E>> chunks = new ArrayList<>(list.size() / chunkSize);
+
+    for (int i = 0; i < list.size(); i += chunkSize) {
+      List<E> chunk = list.subList(i, Math.min(list.size(), i + chunkSize));
+      chunks.add(chunk);
+    }
+
+    return chunks;
   }
 
   public static CharSequence getBoldedString(String value) {
@@ -346,8 +367,7 @@ public class Util {
 
   @SuppressLint("NewApi")
   public static boolean isDefaultSmsProvider(Context context){
-    return (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) ||
-      (context.getPackageName().equals(Telephony.Sms.getDefaultSmsPackage(context)));
+    return context.getPackageName().equals(Telephony.Sms.getDefaultSmsPackage(context));
   }
 
   public static int getCurrentApkReleaseVersion(Context context) {
@@ -374,7 +394,7 @@ public class Util {
   }
 
   public static int getDaysTillBuildExpiry() {
-    int age = (int)TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - BuildConfig.BUILD_TIMESTAMP);
+    int age = (int) TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis() - BuildConfig.BUILD_TIMESTAMP);
     return 90 - age;
   }
 
@@ -394,20 +414,20 @@ public class Util {
   }
 
   public static void postToMain(final @NonNull Runnable runnable) {
-    handler.post(runnable);
+    getHandler().post(runnable);
   }
 
   public static void runOnMain(final @NonNull Runnable runnable) {
     if (isMainThread()) runnable.run();
-    else                handler.post(runnable);
+    else                getHandler().post(runnable);
   }
 
   public static void runOnMainDelayed(final @NonNull Runnable runnable, long delayMillis) {
-    handler.postDelayed(runnable, delayMillis);
+    getHandler().postDelayed(runnable, delayMillis);
   }
 
   public static void cancelRunnableOnMain(@NonNull Runnable runnable) {
-    handler.removeCallbacks(runnable);
+    getHandler().removeCallbacks(runnable);
   }
 
   public static void runOnMainSync(final @NonNull Runnable runnable) {
@@ -431,11 +451,7 @@ public class Util {
   }
 
   public static <T> T getRandomElement(T[] elements) {
-    try {
-      return elements[SecureRandom.getInstance("SHA1PRNG").nextInt(elements.length)];
-    } catch (NoSuchAlgorithmException e) {
-      throw new AssertionError(e);
-    }
+    return elements[new SecureRandom().nextInt(elements.length)];
   }
 
   public static boolean equals(@Nullable Object a, @Nullable Object b) {
@@ -509,5 +525,16 @@ public class Util {
     int      digitGroups = (int) (Math.log10(sizeBytes) / Math.log10(1024));
 
     return new DecimalFormat("#,##0.#").format(sizeBytes/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+  }
+
+  private static Handler getHandler() {
+    if (handler == null) {
+      synchronized (Util.class) {
+        if (handler == null) {
+          handler = new Handler(Looper.getMainLooper());
+        }
+      }
+    }
+    return handler;
   }
 }

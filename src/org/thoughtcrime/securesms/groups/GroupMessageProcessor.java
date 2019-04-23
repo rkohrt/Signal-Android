@@ -166,7 +166,7 @@ public class GroupMessageProcessor {
     if (record.getMembers().contains(Address.fromExternal(context, content.getSender()))) {
       ApplicationContext.getInstance(context)
                         .getJobManager()
-                        .add(new PushGroupUpdateJob(context, content.getSender(), group.getGroupId()));
+                        .add(new PushGroupUpdateJob(content.getSender(), group.getGroupId()));
     }
 
     return null;
@@ -204,7 +204,7 @@ public class GroupMessageProcessor {
   {
     if (group.getAvatar().isPresent()) {
       ApplicationContext.getInstance(context).getJobManager()
-                        .add(new AvatarDownloadJob(context, group.getGroupId()));
+                        .add(new AvatarDownloadJob(group.getGroupId()));
     }
 
     try {
@@ -212,7 +212,7 @@ public class GroupMessageProcessor {
         MmsDatabase               mmsDatabase     = DatabaseFactory.getMmsDatabase(context);
         Address                   addres          = Address.fromExternal(context, GroupUtil.getEncodedId(group.getGroupId(), false));
         Recipient                 recipient       = Recipient.from(context, addres, false);
-        OutgoingGroupMediaMessage outgoingMessage = new OutgoingGroupMediaMessage(recipient, storage, null, content.getTimestamp(), 0, null, Collections.emptyList());
+        OutgoingGroupMediaMessage outgoingMessage = new OutgoingGroupMediaMessage(recipient, storage, null, content.getTimestamp(), 0, null, Collections.emptyList(), Collections.emptyList());
         long                      threadId        = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipient);
         long                      messageId       = mmsDatabase.insertMessageOutbox(outgoingMessage, threadId, false, null);
 

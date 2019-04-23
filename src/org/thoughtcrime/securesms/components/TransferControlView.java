@@ -28,7 +28,6 @@ import org.thoughtcrime.securesms.attachments.Attachment;
 import org.thoughtcrime.securesms.database.AttachmentDatabase;
 import org.thoughtcrime.securesms.events.PartProgressEvent;
 import org.thoughtcrime.securesms.mms.Slide;
-import org.thoughtcrime.securesms.util.Util;
 import org.thoughtcrime.securesms.util.ViewUtil;
 
 import java.util.Collections;
@@ -170,6 +169,7 @@ public class TransferControlView extends FrameLayout {
 
   public void setShowDownloadText(boolean showDownloadText) {
     downloadDetailsText.setVisibility(showDownloadText ? VISIBLE : GONE);
+    forceLayout();
   }
 
   private boolean isUpdateToExistingSet(@NonNull List<Slide> slides) {
@@ -252,13 +252,11 @@ public class TransferControlView extends FrameLayout {
     return totalProgress;
   }
 
-  @Subscribe(sticky = true, threadMode = ThreadMode.ASYNC)
+  @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
   public void onEventAsync(final PartProgressEvent event) {
     if (downloadProgress.containsKey(event.attachment)) {
-      Util.runOnMain(() -> {
-        downloadProgress.put(event.attachment, ((float)event.progress) / event.total);
-        progressWheel.setInstantProgress(calculateProgress(downloadProgress));
-      });
+      downloadProgress.put(event.attachment, ((float) event.progress) / event.total);
+      progressWheel.setInstantProgress(calculateProgress(downloadProgress));
     }
   }
 }
